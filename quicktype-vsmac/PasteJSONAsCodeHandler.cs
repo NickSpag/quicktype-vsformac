@@ -22,12 +22,6 @@ namespace quicktypevsmac
         {
             get
             {
-                //return "quicktype.exe";
-
-                //var test = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-
-                //var boo = File.Exists(Path.Combine(test, "quicktype.exe"));
-
                 var addInPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 return Path.Combine(addInPath, "Resources", "quicktype");
             }
@@ -36,7 +30,6 @@ namespace quicktypevsmac
         public PasteJSONAsCodeHandler()
         {
         }
-
 
         private Process PrepareQuickTypeProcess(string arguments)
         {
@@ -92,6 +85,7 @@ namespace quicktypevsmac
                 return;
             }
 
+            //todo split into separate methods below
             var jsonFileName = await Task.Run(() => WriteJsonToFile(jsonText));
 
             var topLevelFileName = activeDocument.FileName.FileNameWithoutExtension;

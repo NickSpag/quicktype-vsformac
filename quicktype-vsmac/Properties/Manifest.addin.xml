@@ -5,7 +5,7 @@
 	</Extension>
 	<Extension path="/MonoDevelop/Ide/MainMenu/Edit">
 		<SeparatorItem />
-		<ItemSet _label="QuickType">
+		<ItemSet _label="Paste JSON">
 			<CommandItem id="quicktypevsmac.QuickTypeCommands.PasteJSONAsCode" />
 		</ItemSet>
 	</Extension>
