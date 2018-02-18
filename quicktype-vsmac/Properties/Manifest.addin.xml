@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionModel>
+	<Extension path="/MonoDevelop/Ide/Commands/Edit">
+		<Command id="quicktypevsmac.QuickTypeCommands.PasteJSONAsCode" _label="Paste JSON as Code" disabledvisible="true" defaultHandler="quicktypevsmac.PasteJSONAsCodeHandler" />
+	</Extension>
+	<Extension path="/MonoDevelop/Ide/MainMenu/Edit">
+		<SeparatorItem />
+		<ItemSet _label="QuickType">
+			<CommandItem id="quicktypevsmac.QuickTypeCommands.PasteJSONAsCode" />
+		</ItemSet>
+	</Extension>
+	<Runtime>
+		<Import file="quicktype.exe" />
+		<Import file="Resources/quicktype" />
+	</Runtime>
+</ExtensionModel>
