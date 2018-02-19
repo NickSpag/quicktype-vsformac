@@ -10,7 +10,6 @@
 		</ItemSet>
 	</Extension>
 	<Runtime>
-		<Import file="quicktype.exe" />
 		<Import file="Resources/quicktype" />
 	</Runtime>
 </ExtensionModel>

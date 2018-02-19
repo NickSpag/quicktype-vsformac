@@ -3,16 +3,9 @@ using System.Windows.Forms;
 using MonoDevelop.Components.Commands;
 using MonoDevelop.Ide;
 using System.Diagnostics;
-using MonoDevelop.Ide.Gui.Content;
-using MonoDevelop.Ide.Gui;
-using MonoDevelop.Ide.Editor;
-using System.Linq;
 using System.Threading.Tasks;
 using System;
 using AppKit;
-using Mono.Cecil;
-using Mono.Addins;
-using Mono.Addins.Database;
 
 namespace quicktypevsmac
 {
@@ -31,7 +24,7 @@ namespace quicktypevsmac
         {
         }
 
-        private Process PrepareQuickTypeProcess(string arguments)
+        private Process PrepareQuickTypeProcess1(string arguments)
         {
             var process = new Process();
             process.StartInfo.UseShellExecute = false;
@@ -44,9 +37,29 @@ namespace quicktypevsmac
             return process;
         }
 
-        private void ShowMessage(string message)
+        private async Task<Process> PrepareQuickTypeProcess(string language, string jsonText, string newTypeName)
         {
-            IdeApp.Workbench.StatusBar.ShowMessage("QuickType: " + message);
+            string jsonFileName;
+
+            try
+            {
+                jsonFileName = await Task.Run(() => WriteJsonToFile(jsonText));
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine(ex.Message);
+                return new Process();
+            }
+
+            var process = new Process();
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.RedirectStandardError = true;
+            process.StartInfo.CreateNoWindow = true;
+            process.StartInfo.FileName = executablePath;
+            process.StartInfo.Arguments = $"--lang \"{language}\" --top-level \"{newTypeName}\" \"" + jsonFileName + "\"";
+
+            return process;
         }
 
         private string WriteJsonToFile(string text)
@@ -57,39 +70,56 @@ namespace quicktypevsmac
             return jsonFilename;
         }
 
-        #region CommandHandler Methods
-        protected async override void Run()
+        private string GetRecentClipboardText()
         {
-            ShowMessage("Converting...");
-
-            var activeDocument = IdeApp.Workbench.ActiveDocument;
-
-            var language = activeDocument.GetLanguageItem(0, out DocumentRegion region).Language;
-
-            Help.AlignNamingStyles(ref language);
-
-            if (!Help.SupportedLanguages.Contains(language))
-            {
-                ShowMessage("Cannot process JSON. Unsupported language");
-                return;
-            }
-
             var pasteboard = NSPasteboard.GeneralPasteboard.PasteboardItems[0];
 
             var jsonText = pasteboard.GetStringForType("public.utf8-plain-text");
-            System.Console.WriteLine(jsonText);
 
-            if (string.IsNullOrEmpty(jsonText))
+            return jsonText;
+        }
+
+        private void ShowMessage(string message)
+        {
+            IdeApp.Workbench.StatusBar.ShowMessage("Pasting JSON as Code: " + message);
+        }
+
+        private void ShowErrorMessage(string message)
+        {
+            IdeApp.Workbench.StatusBar.ShowError("Pasting JSON Error: " + message);
+        }
+
+        private async Task ClearMessage()
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1.5));
+            IdeApp.Workbench.StatusBar.ShowReady();
+        }
+
+        #region CommandHandler Methods
+        protected async override void Run()
+        {
+            ShowMessage("Preparing...");
+
+            var activeDocument = IdeApp.Workbench.ActiveDocument;
+
+            if (!Help.FindSupportedLanguage(activeDocument, out string language))
             {
-                ShowMessage("Cannot process JSON. Clipboard is empty");
+                ShowErrorMessage("Unsupported language");
                 return;
             }
 
-            //todo split into separate methods below
-            var jsonFileName = await Task.Run(() => WriteJsonToFile(jsonText));
+            var jsonText = GetRecentClipboardText();
 
-            var topLevelFileName = activeDocument.FileName.FileNameWithoutExtension;
-            var process = PrepareQuickTypeProcess("--lang \"" + language + "\" --top-level \"" + topLevelFileName + "\" \"" + jsonFileName + "\"");
+            if (string.IsNullOrEmpty(jsonText))
+            {
+                ShowErrorMessage(" Clipboard is empty");
+                return;
+            }
+
+            var process = await PrepareQuickTypeProcess(language,
+                                                        jsonText,
+                                                        //Use the file name of the active document for the new JSON type's name
+                                                        activeDocument.FileName.FileNameWithoutExtension);
 
             try
             {
@@ -100,17 +130,19 @@ namespace quicktypevsmac
                 if (process.ExitCode != 0)
                 {
                     string error = await process.StandardError.ReadToEndAsync();
-                    ShowMessage($"Connot process JSON. {error}");
+                    ShowErrorMessage($"{error}");
                     return;
                 }
 
-                ShowMessage("JSON Processed. Pasting...");
+                ShowMessage("Success");
                 activeDocument.Editor.InsertAtCaret(output);
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine(ex.Message);
+                ShowErrorMessage(ex.Message);
             }
+
+            await ClearMessage();
         }
 
         protected override void Update(CommandInfo info)
@@ -125,9 +157,5 @@ namespace quicktypevsmac
             }
         }
         #endregion
-
-
-
-
     }
 }
