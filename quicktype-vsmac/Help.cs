@@ -10,21 +10,14 @@ namespace quicktypevsmac
         private static readonly string[] SupportedLanguages =
         {
             "c++",
-            "cpp",
             "cplusplus",
-            "cs",
             "csharp",
-            "elm",
-            "go",
-            "golang",
             "java",
             "objc",
             "objective-c",
             "objectivec",
             "swift",
-            "typescript",
-            "ts",
-            "tsx"
+            "typescript"
         };
 
         private static void AlignNamingStyles(ref string language)
@@ -39,11 +32,10 @@ namespace quicktypevsmac
             {
                 language = language.ToLower();
             }
-
         }
 
         /// <summary>
-        /// Finds the supported language. First checking by file extension to cover 95% of scenarios, before using MonoDevelop's 
+        /// Finds the document's language and if its supported. First checking by file extension to cover 95% of scenarios, before using MonoDevelop's 
         /// extension method that uses Microsoft.CodeAnalysis 
         /// </summary>
         /// <returns><c>true</c>, if supported language was found, <c>false</c> otherwise.</returns>
@@ -55,7 +47,6 @@ namespace quicktypevsmac
             {
                 return true;
             }
-
 
             if (activeDocument.GetLanguageItem(0, out DocumentRegion region)?.Language is string analyzedLanguage)
             {

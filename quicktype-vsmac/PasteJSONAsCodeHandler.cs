@@ -24,19 +24,6 @@ namespace quicktypevsmac
         {
         }
 
-        private Process PrepareQuickTypeProcess1(string arguments)
-        {
-            var process = new Process();
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.StartInfo.CreateNoWindow = true;
-            process.StartInfo.FileName = executablePath;
-            process.StartInfo.Arguments = arguments;
-
-            return process;
-        }
-
         private async Task<Process> PrepareQuickTypeProcess(string language, string jsonText, string newTypeName)
         {
             string jsonFileName;
